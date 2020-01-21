@@ -10,12 +10,12 @@
         @deleteLink="linkDelete(link.id)">
       </flowchart-link>
     </svg>
-    <flowchart-node v-bind.sync="node" 
-      v-for="(node, index) in scene.nodes" 
+    <flowchart-node v-bind.sync="node"
+      v-for="(node, index) in scene.nodes"
       :key="`node${index}`"
       :options="nodeOptions"
-      @linkingStart="linkingStart(node.id)"
-      @linkingStop="linkingStop(node.id)"
+      @linkingStart="linkingStart(node.id, $event)"
+      @linkingStop="linkingStop(node.id, $event)"
       @nodeSelected="nodeSelected(node.id, $event)">
     </flowchart-node>
   </div>
@@ -65,6 +65,8 @@ export default {
         top: 0,
         left: 0
       },
+      linkStart: "node-top",
+      linkEnd: "node-bottom"
     };
   },
   components: {
@@ -89,22 +91,22 @@ export default {
         let x, y, cy, cx, ex, ey;
         x = this.scene.centerX + fromNode.x;
         y = this.scene.centerY + fromNode.y;
-        [cx, cy] = this.getPortPosition('bottom', x, y);
+        [cx, cy] = this.getPortPosition(link.positionStart, x, y);
         x = this.scene.centerX + toNode.x;
         y = this.scene.centerY + toNode.y;
-        [ex, ey] = this.getPortPosition('top', x, y);
+        [ex, ey] = this.getPortPosition(link.positionEnd, x, y);
         return { 
           start: [cx, cy], 
           end: [ex, ey],
           id: link.id,
         };
-      })
+      });
       if (this.draggingLink) {
         let x, y, cy, cx;
         const fromNode = this.findNodeWithID(this.draggingLink.from)
         x = this.scene.centerX + fromNode.x;
         y = this.scene.centerY + fromNode.y;
-        [cx, cy] = this.getPortPosition('bottom', x, y);
+        [cx, cy] = this.getPortPosition(this.linkStart, x, y);
         // push temp dragging link, mouse cursor postion = link end postion 
         lines.push({ 
           start: [cx, cy], 
@@ -125,38 +127,51 @@ export default {
           return id === item.id
       })
     },
-    getPortPosition(type, x, y) {
-      if (type === 'top') {
+    getPortPosition(position, x, y) {
+      if (position === `node-top`) {
         return [x + 40, y];
       }
-      else if (type === 'bottom') {
+      else if (position === 'node-bottom') {
         return [x + 40, y + 80];
       }
+      else if (position === 'node-left') {
+        return [x, y + 40]
+      }
+      else if (position === 'node-right') {
+        return [x + 80, y + 40]
+      }
     },
-    linkingStart(index) {
+    linkingStart(index, position) {
       this.action.linking = true;
+      this.linkStart = position;
       this.draggingLink = {
         from: index,
         mx: 0,
         my: 0,
       };
     },
-    linkingStop(index) {
+    linkingStop(index, position) {
       // add new Link
+      this.linkEnd = position;
       if (this.draggingLink && this.draggingLink.from !== index) {
         // check link existence
         const existed = this.scene.links.find((link) => {
           return link.from === this.draggingLink.from && link.to === index;
-        })
+        });
+
         if (!existed) {
           let maxID = Math.max(0, ...this.scene.links.map((link) => {
             return link.id
-          }))
+          }));
+
           const newLink = {
             id: maxID + 1,
             from: this.draggingLink.from,
             to: index,
+            positionStart: this.linkStart,
+            positionEnd: this.linkEnd
           };
+          console.log(newLink)
           this.scene.links.push(newLink)
           this.$emit('linkAdded', newLink)
         }
@@ -178,9 +193,9 @@ export default {
       this.action.dragging = id;
       this.action.selected = id;
       this.$emit('nodeClick', id);
-      this.mouse.lastX = e.pageX || e.clientX + document.documentElement.scrollLeft
-      this.mouse.lastY = e.pageY || e.clientY + document.documentElement.scrollTop
-    },
+      this.mouse.lastX = e.pageX || e.clientX + document.documentElement.scrollLeft;
+      this.mouse.lastY = e.pageY || e.clientY + document.documentElement.scrollTop;
+      },
     handleMove(e) {
       if (this.action.linking) {
         [this.mouse.x, this.mouse.y] = getMousePosition(this.$el, e);
@@ -238,7 +253,7 @@ export default {
     moveSelectedNode(dx, dy) {
       let index = this.scene.nodes.findIndex((item) => {
         return item.id === this.action.dragging
-      })
+      });
       let left = this.scene.nodes[index].x + dx / this.scene.scale;
       let top = this.scene.nodes[index].y + dy / this.scene.scale;
       this.$set(this.scene.nodes, index, Object.assign(this.scene.nodes[index], {
@@ -263,7 +278,7 @@ export default {
 <style scoped lang="scss">
 .flowchart-container {
   margin: 0;
-  background: #ddd;
+  /*background: #ddd;*/
   position: relative;
   overflow: hidden;
   svg {

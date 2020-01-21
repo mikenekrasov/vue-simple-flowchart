@@ -1,12 +1,8 @@
 <template>
   <div id="app">
-    <h1> simple flowchart</h1>
+    <h1>Блок-схема</h1>
     <div class="tool-wrapper">
-      <select v-model="newNodeType">
-        <option v-for="(item, index) in nodeCategory" :key="index" :value="index">{{item}}</option>
-      </select>
-      <input type="text" v-model="newNodeLabel" placeholder="Input node label">
-      <button @click="addNode">ADD</button>
+      <button class="add-btn" @click="addNode">+</button>
     </div>
     
     <simple-flowchart :scene.sync="scene" 
@@ -38,21 +34,21 @@ export default {
             id: 2,
             x: -700,
             y: -69,
-            type: 'Action',
+            type: 'Продукт 1',
             label: 'test1',
           },
           {
             id: 4,
-            x: -357,
-            y: 80,
-            type: 'Script',
+            x: -450,
+            y: -69,
+            type: 'Продукт 2',
             label: 'test2',
           },
           {
             id: 6,
-            x: -557,
+            x: -450,
             y: 80,
-            type: 'Rule',
+            type: 'Продукт 3',
             label: 'test3',
           }
         ],
@@ -61,19 +57,20 @@ export default {
             id: 3,
             from: 2, // node id the link start
             to: 4,  // node id the link end
+            positionStart: 'node-right',
+            positionEnd: 'node-left'
+          },
+          {
+            id: 4,
+            from: 4, // node id the link start
+            to: 6,  // node id the link end
+            positionStart: 'node-bottom',
+            positionEnd: 'node-top'
           }
         ]
       },
-      newNodeType: 0,
+      newNodeType: '',
       newNodeLabel: '',
-      nodeCategory:[
-        'rule',
-        'action',
-        'script',
-        'decision',
-        'fork',
-        'join',
-      ],
     }
   },
   methods: {
@@ -83,12 +80,13 @@ export default {
     addNode() {
       let maxID = Math.max(0, ...this.scene.nodes.map((link) => {
         return link.id
-      }))
+      }));
+
       this.scene.nodes.push({
         id: maxID + 1,
         x: -400,
         y: 50,
-        type: this.nodeCategory[this.newNodeType],
+        type: this.newNodeType ? this.newNodeType: `Продукт${maxID + 1}`,
         label: this.newNodeLabel ? this.newNodeLabel: `test${maxID + 1}`,
       })
     },
@@ -122,4 +120,14 @@ export default {
     position: relative;
   }
 }
+  .add-btn {
+    position: absolute;
+    padding: 5px 10px;
+    background: #2c3e50;
+    color: #ffffff;
+    border: none;
+    right: 10px;
+    z-index: 1;
+    cursor: pointer;
+  }
 </style>

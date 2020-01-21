@@ -50,14 +50,18 @@ export default {
     handleMouseLeave() {
       this.show.delete = false;
     },
-    caculateCenterPoint() {
-      // caculate arrow position: the center point between start and end
+    calculateCenterPoint() {
+      // calculate arrow position: the center point between start and end
       const dx = (this.end[0] - this.start[0]) / 2;
       const dy = (this.end[1] - this.start[1]) / 2;
       return [this.start[0] + dx, this.start[1] + dy];
+      // const dx = this.end[0] - this.start[0]
+      // const dy = this.end[1] - this.start[1]
+      // console.log(dx, dy);
+      // return [this.start[0] + dx - 15, this.start[1] + dy]
     },
-    caculateRotation() {
-      // caculate arrow rotation
+    calculateRotation() {
+      // calculate arrow rotation
       const angle = -Math.atan2(this.end[0] - this.start[0], this.end[1] - this.start[1]);
       const degree = angle * 180 / Math.PI;
       return degree < 0 ? degree + 360 : degree;
@@ -82,14 +86,14 @@ export default {
       }
     },
     arrowTransform() {
-      const [arrowX, arrowY] = this.caculateCenterPoint();
-      const degree = this.caculateRotation()
+      const [arrowX, arrowY] = this.calculateCenterPoint();
+      const degree = this.calculateRotation()
       return `translate(${arrowX}, ${arrowY}) rotate(${degree})`;
     },
     dAttr() {
       let cx = this.start[0], cy = this.start[1], ex = this.end[0], ey = this.end[1];
-      let x1 = cx, y1 = cy + 50, x2 = ex, y2 = ey - 50;
-      return `M ${cx}, ${cy} C ${x1}, ${y1}, ${x2}, ${y2}, ${ex}, ${ey}`;
+      let x1 = cx, y1 = cy, x2 = ex, y2 = ey;
+      return `M ${cx}, ${cy} L ${x1}, ${y1}, ${x2}, ${y2}`;
     }
   }
 }
@@ -98,5 +102,6 @@ export default {
 <style scoped lang="scss">
 g {
   cursor: pointer;
+  z-index: 0;
 }
 </style>

@@ -1,19 +1,32 @@
 <template>
-  <div class="flowchart-node" :style="nodeStyle" 
+  <div class="flowchart-node" :style="nodeStyle"
     @mousedown="handleMousedown"
     @mouseover="handleMouseOver"
     @mouseleave="handleMouseLeave"
     v-bind:class="{selected: options.selected === id}">
-    <div class="node-port node-input"
-       @mousedown="inputMouseDown"
-       @mouseup="inputMouseUp">
+    <div class="node-port node-top"
+         @mousedown="outputMouseDown"
+         @mouseup="inputMouseDown"
+    >
+    </div>
+    <div class="node-port node-left"
+         @mousedown="outputMouseDown"
+         @mouseup="inputMouseDown"
+    >
     </div>
     <div class="node-main">
       <div v-text="type" class="node-type"></div>
       <div v-text="label" class="node-label"></div>
     </div>
-    <div class="node-port node-output" 
-      @mousedown="outputMouseDown">
+    <div class="node-port node-right"
+         @mousedown="outputMouseDown"
+         @mouseup="inputMouseDown"
+    >
+    </div>
+    <div class="node-port node-bottom"
+         @mousedown="outputMouseDown"
+         @mouseup="inputMouseDown"
+    >
     </div>
     <div v-show="show.delete" class="node-delete">&times;</div>
   </div>
@@ -36,7 +49,7 @@ export default {
       validator(val) {
         return typeof val === 'number'
       }
-    },    
+    },
     y: {
       type: Number,
       default: 0,
@@ -75,8 +88,8 @@ export default {
   computed: {
     nodeStyle() {
       return {
-        top: this.options.centerY + this.y * this.options.scale + 'px', // remove: this.options.offsetTop + 
-        left: this.options.centerX + this.x * this.options.scale + 'px', // remove: this.options.offsetLeft + 
+        top: this.options.centerY + this.y * this.options.scale + 'px', // remove: this.options.offsetTop +
+        left: this.options.centerX + this.x * this.options.scale + 'px', // remove: this.options.offsetLeft +
         transform: `scale(${this.options.scale})`,
       }
     }
@@ -84,8 +97,10 @@ export default {
   methods: {
     handleMousedown(e) {
       const target = e.target || e.srcElement;
-      // console.log(target);
-      if (target.className.indexOf('node-input') < 0 && target.className.indexOf('node-output') < 0) {
+      if (target.className.indexOf('node-top') < 0
+              && target.className.indexOf('node-bottom') < 0
+              && target.className.indexOf('node-left') < 0
+              && target.className.indexOf('node-right') < 0) {
         this.$emit('nodeSelected', e);
       }
       e.preventDefault();
@@ -97,16 +112,18 @@ export default {
       this.show.delete = false;
     },
     outputMouseDown(e) {
-      this.$emit('linkingStart')
+      console.log("outputMouseDown")
+      this.$emit('linkingStart', e.target.classList[1])
       e.preventDefault();
     },
     inputMouseDown(e) {
+      this.$emit('linkingStop', e.target.classList[1])
       e.preventDefault();
     },
-    inputMouseUp(e) {
-      this.$emit('linkingStop')
-      e.preventDefault();
-    },
+    // inputMouseUp(e) {
+    //   this.$emit('linkingStop')
+    //   e.preventDefault();
+    // },
   }
 }
 </script>
@@ -128,6 +145,7 @@ $portSize: 12;
   opacity: .9;
   cursor: move;
   transform-origin: top left;
+  box-shadow: 0 0 0 2px #cccccc;
   .node-main {
     text-align: center;
     .node-type {
@@ -144,8 +162,6 @@ $portSize: 12;
     position: absolute;
     width: #{$portSize}px;
     height: #{$portSize}px;
-    left: 50%;
-    transform: translate(-50%);
     border: 1px solid #ccc;
     border-radius: 100px;
     background: white;
@@ -154,10 +170,22 @@ $portSize: 12;
       border: 1px solid $themeColor;
     }
   }
-  .node-input {
+  .node-left {
+    top: calc(50% - #{$portSize/2}px);
+    left: #{-2+$portSize/-2}px;
+  }
+  .node-right {
+    top: calc(50% - #{$portSize/2}px);
+    right: #{-2+$portSize/-2}px;
+  }
+  .node-top {
+    left: 50%;
+    transform: translate(-50%);
     top: #{-2+$portSize/-2}px;
   }
-  .node-output {
+  .node-bottom {
+    left: 50%;
+    transform: translate(-50%);
     bottom: #{-2+$portSize/-2}px;
   }
   .node-delete {
